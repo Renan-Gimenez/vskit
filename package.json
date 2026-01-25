@@ -1,0 +1,21 @@
+{
+  "name": "vskit",
+  "module": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "vskit": "dist/index.js"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts --outfile dist/index.js --target node",
+    "dev": "bun run src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2"
+  }
+}
