@@ -14,6 +14,8 @@ import { SUPPORTED_IDES } from "../../shared/constants.js";
 import { getConfigBaseDir } from "../../infra/os/index.js";
 import os from "os";
 
+import { resolveIdeExecutable } from "../../infra/filesystem/ide-finder.js";
+
 export async function detectInstalledIdes(): Promise<DetectedIDE[]> {
   const configBase = getConfigBaseDir();
   const home = os.homedir();
@@ -21,26 +23,32 @@ export async function detectInstalledIdes(): Promise<DetectedIDE[]> {
 
   for (const ide of SUPPORTED_IDES) {
     let isAvailableOnPath = false;
+    let resolvedCommand = ide.command;
 
-    // Check if command exists
+    // Check if command exists in PATH
     try {
-      // 'where' on windows, 'which' on unix.
-      // execa has a simpler way? execa('code', ['--version']) is safer
       await execa(ide.command, ["--version"]);
       isAvailableOnPath = true;
     } catch {
       isAvailableOnPath = false;
     }
 
+    // Try to resolve absolute path if not in PATH (or even if it is, to be safe?)
+    // If not in PATH, we MUST find it elsewhere.
+    if (!isAvailableOnPath) {
+      const foundPath = await resolveIdeExecutable(ide.command, ide.name);
+      if (foundPath) {
+        resolvedCommand = foundPath;
+        // logic check: if we found the absolute path, we can technically execute it, so it is "available" to us.
+        isAvailableOnPath = true;
+      }
+    }
+
     // Resolve Config Path
-    // On Windows: %APPDATA%/Code -> C:\Users\user\AppData\Roaming\Code
     const configPath = path.join(configBase, ide.confDirName);
     const configExists = await fs.pathExists(configPath);
 
     // Resolve Extensions Path
-    // Standard: ~/.vscode/extensions
-    // This is an assumption that might need refinement per IDE
-    // VSCodium often uses .vscode-oss
     let extensionsDirName = ".vscode";
     if (ide.id === "vscodium") extensionsDirName = ".vscode-oss";
     if (ide.id === "cursor") extensionsDirName = ".cursor";
@@ -49,11 +57,10 @@ export async function detectInstalledIdes(): Promise<DetectedIDE[]> {
 
     const extensionsPath = path.join(home, extensionsDirName, "extensions");
 
-    // We consider it detected if EITHER binary is in path OR config dir exists
-    // But for "migration" we really need the config dir.
     if (configExists || isAvailableOnPath) {
       detected.push({
         ...ide,
+        command: resolvedCommand, // Update command with absolute path if found
         isAvailableOnPath,
         configPath,
         extensionsPath,
