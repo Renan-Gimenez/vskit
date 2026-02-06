@@ -2,6 +2,7 @@
   "name": "vskit",
   "module": "dist/index.js",
   "type": "module",
+  "version": "2.1.1",
   "bin": {
     "vskit": "dist/index.js"
   },
@@ -16,6 +17,11 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "chalk": "^5.6.2"
+    "@inquirer/prompts": "^8.2.0",
+    "@types/fs-extra": "^11.0.4",
+    "chalk": "^5.6.2",
+    "execa": "^9.6.1",
+    "fs-extra": "^11.3.3",
+    "ora": "^9.1.0"
   }
 }
