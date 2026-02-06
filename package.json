@@ -2,7 +2,7 @@
   "name": "vskit",
   "module": "dist/index.js",
   "type": "module",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "license": "MIT",
   "bin": {
     "vskit": "dist/index.js"
